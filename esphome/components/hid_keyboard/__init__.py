@@ -20,6 +20,7 @@ hid_keyboard_ns = cg.esphome_ns.namespace("hid_keyboard")
 HIDKeyboard = hid_keyboard_ns.class_("HIDKeyboard", cg.Component)
 
 SendKeyAction = hid_keyboard_ns.class_("SendKeyAction", automation.Action)
+SendKeypressAction = hid_keyboard_ns.class_("SendKeypressAction", automation.Action)
 ReleaseAllAction = hid_keyboard_ns.class_("ReleaseAllAction", automation.Action)
 
 CONFIG_SCHEMA = cv.All(
@@ -55,6 +56,27 @@ async def to_code(config):
     ),
 )
 async def send_key_to_code(config, action_id, template_arg, args):
+    parent = await cg.get_variable(config[CONF_ID])
+    var = cg.new_Pvariable(action_id, template_arg, parent)
+    template_ = await cg.templatable(config[CONF_KEY], args, cg.uint8)
+    cg.add(var.set_key(template_))  # type: ignore
+    template_ = await cg.templatable(config[CONF_MODIFIER], args, cg.uint8)
+    cg.add(var.set_modifier(template_))  # type: ignore
+    return var
+
+
+@automation.register_action(
+    "hid_keyboard.send_keypress",
+    SendKeypressAction,
+    cv.Schema(
+        {
+            cv.GenerateID(): cv.use_id(HIDKeyboard),
+            cv.Required(CONF_KEY): cv.templatable(cv.uint8_t),
+            cv.Optional(CONF_MODIFIER, default=0): cv.templatable(cv.uint8_t),
+        }
+    ),
+)
+async def send_keypress_to_code(config, action_id, template_arg, args):
     parent = await cg.get_variable(config[CONF_ID])
     var = cg.new_Pvariable(action_id, template_arg, parent)
     template_ = await cg.templatable(config[CONF_KEY], args, cg.uint8)

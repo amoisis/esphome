@@ -24,6 +24,23 @@ template<typename... Ts> class SendKeyAction : public Action<Ts...> {
   HIDKeyboard *parent_;
 };
 
+template<typename... Ts> class SendKeypressAction : public Action<Ts...> {
+ public:
+  explicit SendKeypressAction(HIDKeyboard *parent) : parent_(parent) {}
+
+  TEMPLATABLE_VALUE(uint8_t, key)
+  TEMPLATABLE_VALUE(uint8_t, modifier)
+
+  void play(Ts... x) override {
+    auto key = this->key_.value(x...);
+    auto modifier = this->modifier_.value(x...);
+    this->parent_->send_keypress(key, modifier);
+  }
+
+ protected:
+  HIDKeyboard *parent_;
+};
+
 template<typename... Ts> class ReleaseAllAction : public Action<Ts...> {
  public:
   explicit ReleaseAllAction(HIDKeyboard *parent) : parent_(parent) {}
