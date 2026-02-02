@@ -2,7 +2,10 @@
 
 #include "hid_keyboard.h"
 #include "esphome/core/log.h"
+#include "esphome/core/util.h"
 #include <cstring>
+#include "tusb.h"
+#include "class/hid/hid.h"
 
 namespace esphome::hid_keyboard {
 
