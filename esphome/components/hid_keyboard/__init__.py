@@ -39,9 +39,11 @@ async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
 
-    # Enable TinyUSB HID support
+    # Enable TinyUSB HID keyboard support via esp_tinyusb
     add_idf_sdkconfig_option("CONFIG_TINYUSB_HID_ENABLED", True)
     add_idf_sdkconfig_option("CONFIG_TINYUSB_HID_COUNT", 1)
+
+    # The tinyusb component will handle USB device initialization
 
 
 @automation.register_action(

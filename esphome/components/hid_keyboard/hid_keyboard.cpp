@@ -4,6 +4,8 @@
 #include "esphome/core/log.h"
 #include "esphome/core/hal.h"
 #include <cstring>
+
+// Include TinyUSB HID APIs from esp_tinyusb
 #include "tusb.h"
 #include "class/hid/hid.h"
 
@@ -11,7 +13,7 @@ namespace esphome::hid_keyboard {
 
 static const char *const TAG = "hid_keyboard";
 
-// HID Report ID for keyboard (standard USB HID)
+// HID Report ID for keyboard
 #ifndef REPORT_ID_KEYBOARD
 #define REPORT_ID_KEYBOARD 1
 #endif
@@ -71,46 +73,40 @@ void HIDKeyboard::send_keypress(uint8_t keycode, uint8_t modifier) {
 }
 
 void HIDKeyboard::send_report_() {
-  // Check if TinyUSB is ready
-  if (!tud_ready()) {
-    ESP_LOGW(TAG, "TinyUSB not ready, cannot send report");
+  // Check if TinyUSB is ready and device is connected
+  if (!tud_hid_ready()) {
+    ESP_LOGD(TAG, "HID not ready, cannot send report");
     return;
   }
 
-  // Send HID keyboard report
-  // Note: REPORT_ID_KEYBOARD is defined as 1
+  // Send HID keyboard report to host
   if (!tud_hid_keyboard_report(REPORT_ID_KEYBOARD, this->keyboard_report_[0], &this->keyboard_report_[2])) {
-    ESP_LOGW(TAG, "Failed to send HID report");
+    ESP_LOGD(TAG, "Failed to send HID report");
   }
 }
 
 }  // namespace esphome::hid_keyboard
 
 // TinyUSB HID Callback Functions
-// These are required by TinyUSB HID device class
+// These are required by TinyUSB's HID device class implementation
 
 // Invoked when received GET HID REPORT DESCRIPTOR request
-// Application return pointer to descriptor
-// Descriptor contents must exist long enough for transfer to complete
 uint8_t const *tud_hid_descriptor_report_cb(uint8_t itf) {
-  // Use the built-in keyboard report descriptor from TinyUSB
-  return NULL;  // Return NULL to use default descriptor
+  // Return NULL to use the built-in keyboard descriptor from TinyUSB
+  return NULL;
 }
 
 // Invoked when received GET_REPORT control request
-// Application must fill buffer report's content and return its length.
-// Return zero will cause the stack to STALL request
 uint16_t tud_hid_get_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer,
                                uint16_t reqlen) {
-  // Not used for keyboard output reports
+  // Not used for keyboard
   return 0;
 }
 
-// Invoked when received SET_REPORT control request or
-// received data on OUT endpoint ( report_type = HID_REPORT_TYPE_OUTPUT )
+// Invoked when received SET_REPORT control request
 void tud_hid_set_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t report_type, uint8_t const *buffer,
                            uint16_t buflen) {
-  // Not used for keyboard
+  // Not used for keyboard (LED output reports would be handled here)
 }
 
 #endif  // USE_ESP32_VARIANT_ESP32P4 || USE_ESP32_VARIANT_ESP32S2 || USE_ESP32_VARIANT_ESP32S3
