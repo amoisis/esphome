@@ -1,0 +1,94 @@
+# Example configuration for HID Keyboard Component
+#
+# This component allows your ESP32-S2/S3/P4 to act as a USB HID keyboard
+# that can send keystrokes to a connected computer.
+#
+# Requirements:
+# - ESP32-S2, ESP32-S3, or ESP32-P4 with USB-OTG support
+# - ESP-IDF framework (not Arduino)
+# - TinyUSB component must be configured first
+#
+# Features:
+# - Non-blocking key press operations (uses loop() for automatic key release)
+# - Automatic key release after 50ms for send_keypress action
+# - Manual key press/release control with send_key and release_all actions
+
+esphome:
+  name: hid-keyboard-example
+  friendly_name: HID Keyboard Example
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: ESP32S3
+  framework:
+    type: esp-idf
+
+# Configure TinyUSB first - this is required!
+tinyusb:
+  usb_product_id: 0x4001
+  usb_vendor_id: 0x303A
+  usb_manufacturer_str: "ESPHome"
+  usb_product_str: "HID Keyboard"
+
+# Configure the HID Keyboard component
+hid_keyboard:
+  id: hid_kbd
+
+# Example usage with buttons
+button:
+  - platform: template
+    name: "Send Key A"
+    on_press:
+      - hid_keyboard.send_key:
+          id: hid_kbd
+          key: 0x04  # HID keycode for 'A'
+          modifier: 0x00  # No modifier
+
+  - platform: template
+    name: "Send Ctrl+C (Copy)"
+    on_press:
+      - hid_keyboard.send_key:
+          id: hid_kbd
+          key: 0x06  # HID keycode for 'C'
+          modifier: 0x01  # Left Control
+
+  - platform: template
+    name: "Send Alt+Tab"
+    on_press:
+      - hid_keyboard.send_key:
+          id: hid_kbd
+          key: 0x2B  # HID keycode for Tab
+          modifier: 0x04  # Left Alt
+
+  - platform: template
+    name: "Release All Keys"
+    on_press:
+      - hid_keyboard.release_all:
+          id: hid_kbd
+
+# Common HID Keyboard Codes Reference:
+# ======================================
+# Keys A-Z: 0x04-0x1D
+# Keys 1-9: 0x1E-0x26
+# Key 0: 0x27
+# Enter: 0x28
+# Escape: 0x29
+# Backspace: 0x2A
+# Tab: 0x2B
+# Space: 0x2C
+# F1-F12: 0x3A-0x45
+# Arrow Right: 0x4F
+# Arrow Left: 0x50
+# Arrow Down: 0x51
+# Arrow Up: 0x52
+#
+# Modifiers (can be OR'd together):
+# ==================================
+# Left Control: 0x01
+# Left Shift: 0x02
+# Left Alt: 0x04
+# Left GUI (Windows/Command): 0x08
+# Right Control: 0x10
+# Right Shift: 0x20
+# Right Alt: 0x40
+# Right GUI: 0x80

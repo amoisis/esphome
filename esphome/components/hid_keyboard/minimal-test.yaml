@@ -1,0 +1,141 @@
+# Minimal HID Keyboard Test Example
+# Perfect for quick testing and debugging
+#
+# Usage:
+# 1. Flash this to your ESP32-S3/S2/P4
+# 2. Connect the USB port to your computer
+# 3. Open a text editor on your computer
+# 4. Use Home Assistant or ESPHome web interface to trigger the buttons
+# 5. Watch as the keyboard types automatically!
+
+esphome:
+  name: hid-keyboard-minimal
+  friendly_name: HID Keyboard Minimal
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: ESP32S3
+  framework:
+    type: esp-idf
+
+logger:
+
+# Required: Configure TinyUSB
+tinyusb:
+  usb_vendor_id: 0x303A
+  usb_product_id: 0x4001
+
+# Configure HID Keyboard
+hid_keyboard:
+  id: kbd
+
+# WiFi (update with your credentials)
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "HID-Keyboard-AP"
+
+# Enable web server for easy testing without Home Assistant
+web_server:
+  port: 80
+
+# Enable API for Home Assistant
+api:
+
+# Simple test buttons
+button:
+  # Test 1: Type a single letter
+  - platform: template
+    name: "Type A"
+    on_press:
+      - hid_keyboard.send_keypress:
+          id: kbd
+          key: 0x04  # Letter A
+
+  # Test 2: Type a word with delays
+  - platform: template
+    name: "Type TEST"
+    on_press:
+      - hid_keyboard.send_keypress:
+          id: kbd
+          key: 0x17  # T
+          modifier: 0x02  # Shift (for capital)
+      - delay: 150ms
+      - hid_keyboard.send_keypress:
+          id: kbd
+          key: 0x08  # E
+      - delay: 150ms
+      - hid_keyboard.send_keypress:
+          id: kbd
+          key: 0x16  # S
+      - delay: 150ms
+      - hid_keyboard.send_keypress:
+          id: kbd
+          key: 0x17  # T
+      - delay: 150ms
+
+  # Test 3: Common shortcut - Copy
+  - platform: template
+    name: "Ctrl+C (Copy)"
+    on_press:
+      - hid_keyboard.send_keypress:
+          id: kbd
+          key: 0x06  # C
+          modifier: 0x01  # Ctrl
+
+  # Test 4: Common shortcut - Paste
+  - platform: template
+    name: "Ctrl+V (Paste)"
+    on_press:
+      - hid_keyboard.send_keypress:
+          id: kbd
+          key: 0x19  # V
+          modifier: 0x01  # Ctrl
+
+  # Test 5: Enter key
+  - platform: template
+    name: "Press Enter"
+    on_press:
+      - hid_keyboard.send_keypress:
+          id: kbd
+          key: 0x28  # Enter
+
+  # Test 6: Space bar
+  - platform: template
+    name: "Press Space"
+    on_press:
+      - hid_keyboard.send_keypress:
+          id: kbd
+          key: 0x2C  # Space
+
+  # Emergency: Release stuck keys
+  - platform: template
+    name: "Release All Keys"
+    on_press:
+      - hid_keyboard.release_all:
+          id: kbd
+
+# Optional: Add a physical button for testing
+# Uncomment and connect a button between GPIO9 and GND
+# binary_sensor:
+#   - platform: gpio
+#     pin:
+#       number: GPIO9
+#       mode:
+#         input: true
+#         pullup: true
+#       inverted: true
+#     name: "Physical Test Button"
+#     on_press:
+#       - hid_keyboard.send_keypress:
+#           id: kbd
+#           key: 0x2C  # Space bar
+
+# Quick Reference - Common Keys:
+# Letters: A=0x04 to Z=0x1D
+# Numbers: 1=0x1E to 0=0x27
+# Enter=0x28, Esc=0x29, Backspace=0x2A, Tab=0x2B, Space=0x2C
+# F1-F12: 0x3A to 0x45
+# Arrows: Right=0x4F, Left=0x50, Down=0x51, Up=0x52
+# Modifiers: Ctrl=0x01, Shift=0x02, Alt=0x04, Win/Cmd=0x08

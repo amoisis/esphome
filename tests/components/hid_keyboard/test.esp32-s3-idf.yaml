@@ -1,0 +1,29 @@
+tinyusb:
+  usb_product_id: 0x4001
+  usb_vendor_id: 0x303A
+
+hid_keyboard:
+  id: hid_kbd
+
+button:
+  - platform: template
+    name: "Send Key A"
+    on_press:
+      - hid_keyboard.send_key:
+          id: hid_kbd
+          key: 0x04  # HID keycode for 'A'
+          modifier: 0x00
+
+  - platform: template
+    name: "Send Ctrl+C"
+    on_press:
+      - hid_keyboard.send_key:
+          id: hid_kbd
+          key: 0x06  # HID keycode for 'C'
+          modifier: 0x01  # Left Control
+
+  - platform: template
+    name: "Release All Keys"
+    on_press:
+      - hid_keyboard.release_all:
+          id: hid_kbd

@@ -1,0 +1,304 @@
+# HID Keyboard - Macro Pad Example
+#
+# This example turns your ESP32 into a custom macro keyboard/pad
+# with physical buttons that trigger keyboard shortcuts.
+#
+# Hardware Setup:
+# - ESP32-S3 DevKit (or S2/P4)
+# - 4-9 push buttons connected to GPIO pins
+# - Optional: RGB LED for status indication
+#
+# Use Cases:
+# - Shortcuts for video editing (cut, copy, paste timeline)
+# - Streaming controls (mute, scene switch, start/stop)
+# - Gaming macros
+# - Productivity shortcuts (open apps, paste templates)
+
+esphome:
+  name: macro-keyboard
+  friendly_name: Macro Keyboard
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: ESP32S3
+  framework:
+    type: esp-idf
+
+logger:
+  level: INFO
+
+# WiFi for remote control and OTA updates
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Fallback hotspot
+  ap:
+    ssid: "Macro-Keyboard"
+    password: "macrokeyboard123"
+
+captive_portal:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret api_key
+
+# OTA updates
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+# Web interface for configuration
+web_server:
+  port: 80
+
+# Required: TinyUSB configuration
+tinyusb:
+  usb_vendor_id: 0x303A
+  usb_product_id: 0x4001
+  usb_manufacturer_str: "ESPHome"
+  usb_product_str: "Macro Keyboard"
+
+# HID Keyboard component
+hid_keyboard:
+  id: macro_kbd
+
+# Status LED (optional - helps debug connectivity)
+light:
+  - platform: status_led
+    name: "Status LED"
+    pin: GPIO48  # Adjust to your board's LED pin
+
+# Physical Macro Buttons
+# Connect buttons between GPIO and GND (internal pullup enabled)
+binary_sensor:
+  # Macro Button 1 - Video Editing: Cut
+  - platform: gpio
+    pin:
+      number: GPIO1
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: "Macro 1: Cut"
+    on_press:
+      - hid_keyboard.send_keypress:
+          id: macro_kbd
+          key: 0x1B  # X
+          modifier: 0x01  # Ctrl+X
+
+  # Macro Button 2 - Video Editing: Copy
+  - platform: gpio
+    pin:
+      number: GPIO2
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: "Macro 2: Copy"
+    on_press:
+      - hid_keyboard.send_keypress:
+          id: macro_kbd
+          key: 0x06  # C
+          modifier: 0x01  # Ctrl+C
+
+  # Macro Button 3 - Video Editing: Paste
+  - platform: gpio
+    pin:
+      number: GPIO3
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: "Macro 3: Paste"
+    on_press:
+      - hid_keyboard.send_keypress:
+          id: macro_kbd
+          key: 0x19  # V
+          modifier: 0x01  # Ctrl+V
+
+  # Macro Button 4 - Video Editing: Undo
+  - platform: gpio
+    pin:
+      number: GPIO4
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: "Macro 4: Undo"
+    on_press:
+      - hid_keyboard.send_keypress:
+          id: macro_kbd
+          key: 0x1D  # Z
+          modifier: 0x01  # Ctrl+Z
+
+  # Macro Button 5 - Streaming: Mute/Unmute (Push to Talk)
+  - platform: gpio
+    pin:
+      number: GPIO5
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: "Macro 5: Mute Toggle"
+    on_press:
+      - hid_keyboard.send_keypress:
+          id: macro_kbd
+          key: 0x10  # M
+          modifier: 0x01  # Ctrl+M (common mute shortcut)
+
+  # Macro Button 6 - Screenshot: Windows+Shift+S (Snipping Tool)
+  - platform: gpio
+    pin:
+      number: GPIO6
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: "Macro 6: Screenshot"
+    on_press:
+      - hid_keyboard.send_keypress:
+          id: macro_kbd
+          key: 0x16  # S
+          modifier: 0x0A  # Win(0x08) + Shift(0x02) = 0x0A
+
+  # Macro Button 7 - Task Manager: Ctrl+Shift+Esc
+  - platform: gpio
+    pin:
+      number: GPIO7
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: "Macro 7: Task Manager"
+    on_press:
+      - hid_keyboard.send_keypress:
+          id: macro_kbd
+          key: 0x29  # Escape
+          modifier: 0x03  # Ctrl(0x01) + Shift(0x02) = 0x03
+
+  # Macro Button 8 - Show Desktop: Win+D
+  - platform: gpio
+    pin:
+      number: GPIO8
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: "Macro 8: Show Desktop"
+    on_press:
+      - hid_keyboard.send_keypress:
+          id: macro_kbd
+          key: 0x07  # D
+          modifier: 0x08  # Win key
+
+  # Macro Button 9 - Custom: F13 (Many apps let you bind F13-F24)
+  - platform: gpio
+    pin:
+      number: GPIO9
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    name: "Macro 9: F13 (Custom)"
+    on_press:
+      - hid_keyboard.send_keypress:
+          id: macro_kbd
+          key: 0x68  # F13
+
+# Software buttons (controllable via Home Assistant)
+button:
+  # Type a text template
+  - platform: template
+    name: "Type Email"
+    on_press:
+      # Types: your.email@example.com
+      # Note: This is a simplified version, full email typing would need more keys
+      - hid_keyboard.send_keypress:
+          id: macro_kbd
+          key: 0x08  # e
+      - delay: 100ms
+      - hid_keyboard.send_keypress:
+          id: macro_kbd
+          key: 0x10  # m
+      - delay: 100ms
+      - hid_keyboard.send_keypress:
+          id: macro_kbd
+          key: 0x04  # a
+      - delay: 100ms
+      - hid_keyboard.send_keypress:
+          id: macro_kbd
+          key: 0x0C  # i
+      - delay: 100ms
+      - hid_keyboard.send_keypress:
+          id: macro_kbd
+          key: 0x0F  # l
+
+  # Media controls
+  - platform: template
+    name: "Play/Pause (Spacebar)"
+    on_press:
+      - hid_keyboard.send_keypress:
+          id: macro_kbd
+          key: 0x2C  # Space (common play/pause in video players)
+
+  # Emergency key release
+  - platform: template
+    name: "Release All Keys"
+    on_press:
+      - hid_keyboard.release_all:
+          id: macro_kbd
+
+# Optional: Restart button
+  - platform: restart
+    name: "Restart Device"
+
+# =============================================================================
+# CUSTOMIZATION GUIDE
+# =============================================================================
+#
+# To customize macros for your workflow:
+#
+# 1. Determine the keyboard shortcut you want to emulate
+# 2. Look up the key codes (see reference at bottom)
+# 3. Calculate the modifier value by adding:
+#    - Ctrl = 0x01
+#    - Shift = 0x02
+#    - Alt = 0x04
+#    - Win/Cmd = 0x08
+# 4. Update the button configuration
+#
+# Example: Ctrl+Shift+T (Reopen closed tab)
+#   key: 0x17 (T)
+#   modifier: 0x03 (Ctrl 0x01 + Shift 0x02 = 0x03)
+#
+# POPULAR SHORTCUTS:
+#
+# Developer Tools: F12 or Ctrl+Shift+I
+#   key: 0x45, modifier: 0x00  OR  key: 0x0C, modifier: 0x03
+#
+# Save As: Ctrl+Shift+S
+#   key: 0x16, modifier: 0x03
+#
+# New Tab: Ctrl+T
+#   key: 0x17, modifier: 0x01
+#
+# Close Tab: Ctrl+W
+#   key: 0x1A, modifier: 0x01
+#
+# Zoom In: Ctrl++
+#   key: 0x2E, modifier: 0x01
+#
+# Zoom Out: Ctrl+-
+#   key: 0x2D, modifier: 0x01
+#
+# =============================================================================
+# KEY CODE QUICK REFERENCE
+# =============================================================================
+# A-Z: 0x04-0x1D | 1-9: 0x1E-0x26 | 0: 0x27
+# Enter: 0x28 | Esc: 0x29 | Backspace: 0x2A | Tab: 0x2B | Space: 0x2C
+# F1-F12: 0x3A-0x45 | F13-F24: 0x68-0x73
+# Insert: 0x49 | Home: 0x4A | PgUp: 0x4B | Delete: 0x4C | End: 0x4D | PgDn: 0x4E
+# Arrows: Right: 0x4F | Left: 0x50 | Down: 0x51 | Up: 0x52
+# =============================================================================
