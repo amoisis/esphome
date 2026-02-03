@@ -13,7 +13,7 @@ class HIDKeyboard : public Component {
   void setup() override;
   void loop() override;
   void dump_config() override;
-  float get_setup_priority() const override { return setup_priority::AFTER_CONNECTION; }
+  float get_setup_priority() const override { return setup_priority::BUS; }
 
   // Send a key with modifier
   void send_key(uint8_t keycode, uint8_t modifier = 0);
