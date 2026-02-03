@@ -23,18 +23,33 @@ static const char *const TAG = "hid_keyboard";
 void HIDKeyboard::setup() {
   ESP_LOGI(TAG, "Setting up HID Keyboard");
   this->init_hid_();
+
+  // For single-USB-port boards (SuperMini), give USB peripheral time to initialize
+  delay(100);
+
   // Check if HID is available (TinyUSB initialized successfully)
   this->hid_available_ = tud_hid_ready();
   if (!this->hid_available_) {
     ESP_LOGW(TAG, "HID not available yet - will retry in loop");
+    ESP_LOGW(TAG, "If using single-USB board (SuperMini), ensure USB cable is connected");
+  } else {
+    ESP_LOGI(TAG, "HID device is ready on startup");
   }
 }
 
 void HIDKeyboard::loop() {
   // Check if HID became available
-  if (!this->hid_available_ && tud_hid_ready()) {
-    this->hid_available_ = true;
-    ESP_LOGI(TAG, "HID device is now ready");
+  if (!this->hid_available_) {
+    // Check every 1 second if USB enumeration completed
+    static uint32_t last_check = 0;
+    uint32_t now = millis();
+    if (now - last_check > 1000) {
+      last_check = now;
+      if (tud_hid_ready()) {
+        this->hid_available_ = true;
+        ESP_LOGI(TAG, "HID device is now ready (USB enumerated successfully)");
+      }
+    }
   }
 }
 
