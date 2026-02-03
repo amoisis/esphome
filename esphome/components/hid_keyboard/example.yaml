@@ -23,6 +23,10 @@ esp32:
   framework:
     type: esp-idf
 
+# Logger configuration - use UART0 to avoid conflict with USB-OTG
+logger:
+  hardware_uart: UART0
+
 # Configure TinyUSB first - this is required!
 tinyusb:
   usb_product_id: 0x4001

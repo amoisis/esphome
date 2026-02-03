@@ -19,6 +19,7 @@ esp32:
     type: esp-idf
 
 logger:
+  hardware_uart: UART0
 
 # Required: Configure TinyUSB
 tinyusb:
