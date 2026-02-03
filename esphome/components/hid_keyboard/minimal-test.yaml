@@ -29,8 +29,6 @@ tinyusb:
 # Configure HID Keyboard
 hid_keyboard:
   id: kbd
-  status_sensor:
-    name: "USB Connection Status"
 
 # WiFi (update with your credentials)
 wifi:
