@@ -127,7 +127,7 @@ void HIDKeyboard::init_hid_() {
 
   tinyusb_config_t tusb_cfg = {0};
   tusb_cfg.device_descriptor = NULL;
-  tusb_cfg.string_descriptor = hid_string_descriptor;
+  tusb_cfg.string_descriptor = (const char **) hid_string_descriptor;
   tusb_cfg.string_descriptor_count = sizeof(hid_string_descriptor) / sizeof(hid_string_descriptor[0]);
   tusb_cfg.external_phy = false;
 #if (TUD_OPT_HIGH_SPEED)
