@@ -3,9 +3,15 @@
 #if defined(USE_ESP32_VARIANT_ESP32P4) || defined(USE_ESP32_VARIANT_ESP32S2) || defined(USE_ESP32_VARIANT_ESP32S3)
 
 #include "esphome/core/component.h"
-#include "esphome/components/binary_sensor/binary_sensor.h"
 #include <cstdint>
 #include <cstring>
+
+// Forward declaration for optional binary_sensor
+namespace esphome {
+namespace binary_sensor {
+class BinarySensor;
+}
+}  // namespace esphome
 
 namespace esphome::hid_keyboard {
 
