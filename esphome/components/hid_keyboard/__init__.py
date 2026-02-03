@@ -60,6 +60,14 @@ async def to_code(config):
     add_idf_sdkconfig_option("CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG_ENABLED", False)
     add_idf_sdkconfig_option("CONFIG_USB_SERIAL_JTAG_ENABLED", False)
 
+    # Additional USB OTG options to ensure proper device enumeration
+    add_idf_sdkconfig_option(
+        "CONFIG_TINYUSB_HID_PROTOCOL", "1"
+    )  # HID Keyboard protocol
+    add_idf_sdkconfig_option("CONFIG_TINYUSB_HID_SUBCLASS", "1")  # Boot subclass
+    add_idf_sdkconfig_option("CONFIG_TINYUSB_ENDPOINT0_SIZE", "64")
+    add_idf_sdkconfig_option("CONFIG_TINYUSB_MAX_CONFIG_POWER", "500")
+
 
 @automation.register_action(
     "hid_keyboard.send_key",

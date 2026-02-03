@@ -10,14 +10,6 @@
 #include "class/hid/hid.h"
 #include "class/hid/hid_device.h"
 
-// ESP-IDF GPIO configuration for USB OTG
-#ifdef USE_ESP_IDF
-#include "driver/gpio.h"
-// USB D- and D+ GPIO pins for ESP32-S3
-#define USB_DP_PIN GPIO_NUM_20
-#define USB_DM_PIN GPIO_NUM_19
-#endif
-
 namespace esphome::hid_keyboard {
 
 static const char *const TAG = "hid_keyboard";
@@ -30,30 +22,13 @@ static const char *const TAG = "hid_keyboard";
 
 void HIDKeyboard::setup() {
   ESP_LOGI(TAG, "Setting up HID Keyboard");
-
-#ifdef USE_ESP_IDF
-  // CRITICAL: Force USB peripheral into OTG device mode for SuperMini/single-USB boards
-  // On ESP32-S3 SuperMini, the USB peripheral can be in JTAG mode after programming
-  // We need to explicitly switch it to OTG device mode for HID to work
-  ESP_LOGI(TAG, "Forcing USB PHY to OTG device mode (disabling JTAG)");
-
-  // Configure USB D+ (GPIO20) and D- (GPIO19) pins on ESP32-S3
-  gpio_config_t usb_gpio_config = {};
-  usb_gpio_config.pin_bit_mask = (1ULL << USB_DM_PIN) | (1ULL << USB_DP_PIN);
-  usb_gpio_config.mode = GPIO_MODE_INPUT_OUTPUT;
-  usb_gpio_config.pull_up_en = GPIO_PULLUP_DISABLE;
-  usb_gpio_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
-  usb_gpio_config.intr_type = GPIO_INTR_DISABLE;
-  gpio_config(&usb_gpio_config);
-
-  ESP_LOGI(TAG, "USB GPIO pins configured (GPIO19=D-, GPIO20=D+)");
-#endif
-
   this->init_hid_();
 
   // For single-USB-port boards (SuperMini), give USB peripheral time to initialize
   // The USB peripheral needs time to switch from JTAG mode (programming) to OTG mode (device)
-  delay(500);
+  // sdkconfig options (CONFIG_TINYUSB_DEVICE_MODE, CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG_ENABLED)
+  // should have configured the USB peripheral at startup
+  delay(1000);
 
   // Check if HID is available (TinyUSB initialized successfully)
   // Also check tud_mounted() which indicates USB device is enumerated by host
@@ -62,15 +37,15 @@ void HIDKeyboard::setup() {
 
   this->hid_available_ = hid_ready && usb_mounted;
 
-  ESP_LOGD(TAG, "USB Status: HID ready=%d, USB mounted=%d", hid_ready, usb_mounted);
+  ESP_LOGI(TAG, "USB Status: HID ready=%d, USB mounted=%d", hid_ready, usb_mounted);
 
   if (!this->hid_available_) {
     ESP_LOGW(TAG, "HID not available yet - will retry in loop");
     if (!usb_mounted) {
-      ESP_LOGW(TAG, "USB device not enumerated - check USB connection and that SuperMini is not in JTAG mode");
+      ESP_LOGW(TAG, "USB device not enumerated to host - verify USB cable and that device is not in JTAG mode");
     }
     if (!hid_ready) {
-      ESP_LOGW(TAG, "HID interface not ready - TinyUSB may not be initialized");
+      ESP_LOGW(TAG, "HID interface not ready - TinyUSB may not have initialized HID class");
     }
   } else {
     ESP_LOGI(TAG, "HID device is ready and USB enumerated on startup");
