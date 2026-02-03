@@ -36,12 +36,12 @@ api:
 ota:
   - platform: esphome
 
-# Configure TinyUSB
-tinyusb:
-  usb_vendor_id: 0x303A
-  usb_product_id: 0x4001
-  usb_manufacturer_str: "ESPHome"
-  usb_product_str: "HID Keyboard Test"
+# Configure TinyUSB - REMOVED to prevent conflict with hid_keyboard driver
+# tinyusb:
+#   usb_vendor_id: 0x303A
+#   usb_product_id: 0x4001
+#   usb_manufacturer_str: "ESPHome"
+#   usb_product_str: "HID Keyboard Test"
 
 # HID Keyboard - uses local component
 hid_keyboard:
