@@ -1,6 +1,6 @@
 from esphome import automation
 import esphome.codegen as cg
-from esphome.components import binary_sensor, esp32
+from esphome.components import esp32
 from esphome.components.esp32 import (
     VARIANT_ESP32P4,
     VARIANT_ESP32S2,
@@ -15,7 +15,6 @@ DEPENDENCIES = ["tinyusb"]
 
 CONF_KEY = "key"
 CONF_MODIFIER = "modifier"
-CONF_STATUS_SENSOR = "status_sensor"
 
 hid_keyboard_ns = cg.esphome_ns.namespace("hid_keyboard")
 HIDKeyboard = hid_keyboard_ns.class_("HIDKeyboard", cg.Component)
@@ -28,7 +27,6 @@ CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(HIDKeyboard),
-            cv.Optional(CONF_STATUS_SENSOR): binary_sensor.binary_sensor_schema(),
         }
     ).extend(cv.COMPONENT_SCHEMA),
     esp32.only_on_variant(
@@ -40,11 +38,6 @@ CONFIG_SCHEMA = cv.All(
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
-
-    # Configure optional USB status sensor
-    if CONF_STATUS_SENSOR in config:
-        sens = await binary_sensor.new_binary_sensor(config[CONF_STATUS_SENSOR])
-        cg.add(var.set_status_sensor(sens))
 
     # Enable TinyUSB HID device in sdkconfig
     add_idf_sdkconfig_option("CONFIG_TINYUSB_HID_ENABLED", True)

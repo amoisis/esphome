@@ -6,13 +6,6 @@
 #include <cstdint>
 #include <cstring>
 
-// Forward declaration for optional binary_sensor
-namespace esphome {
-namespace binary_sensor {
-class BinarySensor;
-}
-}  // namespace esphome
-
 namespace esphome::hid_keyboard {
 
 class HIDKeyboard : public Component {
@@ -39,10 +32,6 @@ class HIDKeyboard : public Component {
 
   // Key release delay in milliseconds
   static constexpr uint32_t KEY_RELEASE_DELAY_MS = 50;
-
-  // USB connection status sensor
-  binary_sensor::BinarySensor *status_sensor_{nullptr};
-  bool usb_ready_{false};  // Track previous USB status to avoid unnecessary publishes
 
   // Initialize TinyUSB HID
   void init_hid_();

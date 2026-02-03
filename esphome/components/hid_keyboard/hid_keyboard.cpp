@@ -26,15 +26,7 @@ void HIDKeyboard::setup() {
 }
 
 void HIDKeyboard::loop() {
-  // Update USB connection status sensor if configured
-  if (this->status_sensor_ != nullptr) {
-    bool is_ready = tud_hid_ready();
-    // Only update if state has changed to avoid unnecessary publishes
-    if (this->usb_ready_ != is_ready) {
-      this->usb_ready_ = is_ready;
-      this->status_sensor_->publish_state(is_ready);
-    }
-  }
+  // Empty - all operations are non-blocking
 }
 
 void HIDKeyboard::dump_config() { ESP_LOGCONFIG(TAG, "HID Keyboard:"); }
