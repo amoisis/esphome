@@ -4,14 +4,23 @@ esphome:
   friendly_name: HID Keyboard Local Test
 
 esp32:
-  board: esp32-s3-devkitc-1
+  board: lolin_s3_mini
   variant: ESP32S3
   framework:
     type: esp-idf
     sdkconfig_options:
+      # Disable the native USB Serial/JTAG driver so TinyUSB can take over
       CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG: "n"
+      # Send logs to UART0 (TX/RX pins) to avoid breaking USB timing
+      # Note: You won't see logs on the USB cable in this mode!
       CONFIG_ESP_CONSOLE_UART_DEFAULT: "y"
       CONFIG_ESP_CONSOLE_UART_NUM: "0"
+      # Enable TinyUSB HID
+      CONFIG_TINYUSB_ENABLED: "y"
+      CONFIG_TINYUSB_HID_ENABLED: "y"
+      CONFIG_TINYUSB_HID_COUNT: 1
+      # Disable CDC to avoid composite complexity for now
+      CONFIG_TINYUSB_CDC_ENABLED: "n"
 
 logger:
   hardware_uart: UART0
