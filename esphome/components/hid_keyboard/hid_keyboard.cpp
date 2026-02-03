@@ -23,10 +23,19 @@ static const char *const TAG = "hid_keyboard";
 void HIDKeyboard::setup() {
   ESP_LOGI(TAG, "Setting up HID Keyboard");
   this->init_hid_();
+  // Check if HID is available (TinyUSB initialized successfully)
+  this->hid_available_ = tud_hid_ready();
+  if (!this->hid_available_) {
+    ESP_LOGW(TAG, "HID not available yet - will retry in loop");
+  }
 }
 
 void HIDKeyboard::loop() {
-  // Empty - all operations are non-blocking
+  // Check if HID became available
+  if (!this->hid_available_ && tud_hid_ready()) {
+    this->hid_available_ = true;
+    ESP_LOGI(TAG, "HID device is now ready");
+  }
 }
 
 void HIDKeyboard::dump_config() { ESP_LOGCONFIG(TAG, "HID Keyboard:"); }
@@ -58,13 +67,15 @@ void HIDKeyboard::send_keypress(uint8_t keycode, uint8_t modifier) {
 }
 
 void HIDKeyboard::send_report_() {
-  // Check if TinyUSB is ready and device is connected
+  // Safety check: Verify TinyUSB is available before attempting to use HID
+  // tud_hid_ready() will return false if TinyUSB initialization failed or USB is not connected
   if (!tud_hid_ready()) {
-    ESP_LOGD(TAG, "HID not ready, cannot send report");
+    ESP_LOGD(TAG, "HID not ready, cannot send report (TinyUSB may be failed or USB disconnected)");
     return;
   }
 
   // Send HID keyboard report to host
+  // tud_hid_keyboard_report expects (report_id, modifier, keycode[6])
   if (!tud_hid_keyboard_report(REPORT_ID_KEYBOARD, this->keyboard_report_[0], &this->keyboard_report_[2])) {
     ESP_LOGD(TAG, "Failed to send HID report");
   }

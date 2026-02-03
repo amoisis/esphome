@@ -13,7 +13,7 @@ class HIDKeyboard : public Component {
   void setup() override;
   void loop() override;
   void dump_config() override;
-  float get_setup_priority() const override { return setup_priority::DATA; }
+  float get_setup_priority() const override { return setup_priority::AFTER_CONNECTION; }
 
   // Send a key with modifier
   void send_key(uint8_t keycode, uint8_t modifier = 0);
@@ -27,6 +27,9 @@ class HIDKeyboard : public Component {
  protected:
   // HID keyboard report buffer
   uint8_t keyboard_report_[8]{};
+
+  // Track if HID is available
+  bool hid_available_{false};
 
   // Key release delay in milliseconds
   static constexpr uint32_t KEY_RELEASE_DELAY_MS = 50;
