@@ -52,7 +52,9 @@ async def to_code(config):
 
     # CRITICAL: Force USB device mode activation for single-USB boards (SuperMini)
     add_idf_sdkconfig_option("CONFIG_TINYUSB_DEVICE_MODE", True)
-    add_idf_sdkconfig_option("CONFIG_USB_OTG_SUPPORTED_SPEED_HS", True)
+    # ESP32-S3 internal PHY is Full Speed (USB 1.1), NOT High Speed
+    # Forcing HS would require external PHY and fail on SuperMini
+    add_idf_sdkconfig_option("CONFIG_USB_OTG_SUPPORTED_SPEED_HS", False)
 
     # Disable built-in JTAG/Serial to prevent conflicts with TinyUSB HID
     # This ensures TinyUSB gets exclusive access to the USB peripheral
@@ -71,7 +73,8 @@ async def to_code(config):
     # Ensure USB device has endpoints configured for HID
     add_idf_sdkconfig_option("CONFIG_TINYUSB_HID_EP_BUFSIZE", "64")
     # Enable USB device with HID endpoint
-    add_idf_sdkconfig_option("CONFIG_TINYUSB_RHPORT_MODE", "1")  # Device mode
+    # 0 = Full Speed (internal PHY), 1 = High Speed
+    add_idf_sdkconfig_option("CONFIG_TINYUSB_RHPORT_MODE", "0")
 
 
 @automation.register_action(
