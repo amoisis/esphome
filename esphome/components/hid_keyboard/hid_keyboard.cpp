@@ -9,10 +9,38 @@
 #include "tusb.h"
 #include "class/hid/hid.h"
 #include "class/hid/hid_device.h"
+#include "tinyusb.h"
+#include "tinyusb_default_config.h"
 
 namespace esphome::hid_keyboard {
 
 static const char *const TAG = "hid_keyboard";
+
+// HID Configuration Descriptor
+// Defines 1 configuration with 1 HID interface
+// Length calculation: Config + (Number of HID interfaces * HID Descriptor Length)
+// CFG_TUD_HID is defined by CONFIG_TINYUSB_HID_COUNT in sdkconfig
+#define TUSB_DESC_TOTAL_LEN (TUD_CONFIG_DESC_LEN + CFG_TUD_HID * TUD_HID_DESC_LEN)
+
+// Standard HID Keyboard Report Descriptor
+static const uint8_t desc_hid_report[] = {TUD_HID_REPORT_DESC_KEYBOARD()};
+
+// Used for configuration descriptor
+// Interface number, string index, protocol, report descriptor len, EP In address, size & polling interval
+// 0x81 is the standard instruction for EP1 IN
+static const uint8_t hid_configuration_descriptor[] = {
+    TUD_CONFIG_DESCRIPTOR(1, 1, 0, TUSB_DESC_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+    TUD_HID_DESCRIPTOR(0, 0, HID_ITF_PROTOCOL_KEYBOARD, sizeof(desc_hid_report), 0x81, 16, 10),
+};
+
+static const char *const hid_string_descriptor[] = {
+    // array of pointer to string descriptors
+    (char[]){0x09, 0x04},  // 0: is supported language is English (0x0409)
+    "ESPHome",             // 1: Manufacturer
+    "HID Keyboard",        // 2: Product
+    "123456",              // 3: Serials, should use chip ID
+    "HID Interface",       // 4: HID
+};
 
 // HID Report ID for keyboard
 // Set to 0 because TUD_HID_REPORT_DESC_KEYBOARD() without arguments uses no report ID
@@ -96,6 +124,31 @@ void HIDKeyboard::loop() {
 void HIDKeyboard::dump_config() { ESP_LOGCONFIG(TAG, "HID Keyboard:"); }
 
 void HIDKeyboard::init_hid_() {
+  ESP_LOGI(TAG, "Initializing TinyUSB Driver...");
+
+  tinyusb_config_t tusb_cfg = TINYUSB_DEFAULT_CONFIG();
+
+  tusb_cfg.descriptor.device = NULL;  // Uses default text descriptors
+  tusb_cfg.descriptor.full_speed_config = hid_configuration_descriptor;
+  tusb_cfg.descriptor.string = hid_string_descriptor;
+  tusb_cfg.descriptor.string_count = sizeof(hid_string_descriptor) / sizeof(hid_string_descriptor[0]);
+
+// Ensure high speed config is disabled or handled if strict mode is on
+#if (TUD_OPT_HIGH_SPEED)
+  tusb_cfg.descriptor.high_speed_config = hid_configuration_descriptor;
+#endif
+
+  esp_err_t err = tinyusb_driver_install(&tusb_cfg);
+  if (err != ESP_OK) {
+    if (err == ESP_ERR_INVALID_STATE) {
+      ESP_LOGW(TAG, "TinyUSB driver already installed");
+    } else {
+      ESP_LOGE(TAG, "Failed to install TinyUSB driver: %s", esp_err_to_name(err));
+    }
+  } else {
+    ESP_LOGI(TAG, "TinyUSB driver installed successfully");
+  }
+
   // Initialize keyboard report buffer
   memset(this->keyboard_report_, 0, sizeof(this->keyboard_report_));
 }
@@ -143,12 +196,8 @@ void HIDKeyboard::send_report_() {
 // and needs to find these symbols during linking
 extern "C" {
 
-// Standard HID Keyboard Report Descriptor
-// This tells the PC what buttons/keys this device has
-static const uint8_t desc_hid_report[] = {TUD_HID_REPORT_DESC_KEYBOARD()};
-
 // Invoked when received GET HID REPORT DESCRIPTOR request
-uint8_t const *tud_hid_descriptor_report_cb(uint8_t itf) { return desc_hid_report; }
+uint8_t const *tud_hid_descriptor_report_cb(uint8_t itf) { return esphome::hid_keyboard::desc_hid_report; }
 
 // Invoked when received GET_REPORT control request
 uint16_t tud_hid_get_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer,
