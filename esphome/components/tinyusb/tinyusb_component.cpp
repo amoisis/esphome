@@ -24,7 +24,10 @@ void TinyUSB::setup() {
 
   esp_err_t result = tinyusb_driver_install(&this->tusb_cfg_);
   if (result != ESP_OK) {
+    ESP_LOGE(TAG, "tinyusb_driver_install failed with error code: 0x%x (%s)", result, esp_err_to_name(result));
     this->mark_failed();
+  } else {
+    ESP_LOGI(TAG, "TinyUSB driver installed successfully");
   }
 }
 
