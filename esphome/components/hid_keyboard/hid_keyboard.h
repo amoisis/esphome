@@ -3,6 +3,7 @@
 #if defined(USE_ESP32_VARIANT_ESP32P4) || defined(USE_ESP32_VARIANT_ESP32S2) || defined(USE_ESP32_VARIANT_ESP32S3)
 
 #include "esphome/core/component.h"
+#include "esphome/components/binary_sensor/binary_sensor.h"
 #include <cstdint>
 #include <cstring>
 
@@ -11,8 +12,11 @@ namespace esphome::hid_keyboard {
 class HIDKeyboard : public Component {
  public:
   void setup() override;
+  void loop() override;
   void dump_config() override;
   float get_setup_priority() const override { return setup_priority::DATA; }
+
+  void set_status_sensor(binary_sensor::BinarySensor *sensor) { this->status_sensor_ = sensor; }
 
   // Send a key with modifier
   void send_key(uint8_t keycode, uint8_t modifier = 0);
@@ -29,6 +33,9 @@ class HIDKeyboard : public Component {
 
   // Key release delay in milliseconds
   static constexpr uint32_t KEY_RELEASE_DELAY_MS = 50;
+
+  // USB connection status sensor
+  binary_sensor::BinarySensor *status_sensor_{nullptr};
 
   // Initialize TinyUSB HID
   void init_hid_();
