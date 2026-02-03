@@ -23,23 +23,11 @@ void HIDKeyboard::setup() {
   this->init_hid_();
 }
 
-void HIDKeyboard::loop() {
-  // Check if we have a pending keypress that needs to be released
-  if (this->keypress_pending_) {
-    uint32_t now = millis();
-    if (now - this->last_keypress_time_ >= KEY_RELEASE_DELAY_MS) {
-      this->release_all();
-    }
-  }
-}
-
 void HIDKeyboard::dump_config() { ESP_LOGCONFIG(TAG, "HID Keyboard:"); }
 
 void HIDKeyboard::init_hid_() {
   // Initialize keyboard report buffer
   memset(this->keyboard_report_, 0, sizeof(this->keyboard_report_));
-  this->keypress_pending_ = false;
-  this->last_keypress_time_ = 0;
 }
 
 void HIDKeyboard::send_key(uint8_t keycode, uint8_t modifier) {
@@ -51,25 +39,16 @@ void HIDKeyboard::send_key(uint8_t keycode, uint8_t modifier) {
   this->keyboard_report_[2] = keycode;
 
   this->send_report_();
-  this->keypress_pending_ = false;
 }
 
 void HIDKeyboard::release_all() {
   memset(this->keyboard_report_, 0, sizeof(this->keyboard_report_));
   this->send_report_();
-  this->keypress_pending_ = false;
 }
 
 void HIDKeyboard::send_keypress(uint8_t keycode, uint8_t modifier) {
-  // Send the key press immediately
-  memset(this->keyboard_report_, 0, sizeof(this->keyboard_report_));
-  this->keyboard_report_[0] = modifier;
-  this->keyboard_report_[2] = keycode;
-  this->send_report_();
-
-  // Schedule automatic release after KEY_RELEASE_DELAY_MS (non-blocking)
-  this->keypress_pending_ = true;
-  this->last_keypress_time_ = millis();
+  this->send_key(keycode, modifier);
+  this->set_timeout("release_key", KEY_RELEASE_DELAY_MS, [this]() { this->release_all(); });
 }
 
 void HIDKeyboard::send_report_() {
@@ -90,11 +69,11 @@ void HIDKeyboard::send_report_() {
 // TinyUSB HID Callback Functions
 // These are required by TinyUSB's HID device class implementation
 
+// Standard HID Keyboard Report Descriptor
+static const uint8_t hid_report_desc[] = {TUD_HID_REPORT_DESC_KEYBOARD()};
+
 // Invoked when received GET HID REPORT DESCRIPTOR request
-uint8_t const *tud_hid_descriptor_report_cb(uint8_t itf) {
-  // Return NULL to use the built-in keyboard descriptor from TinyUSB
-  return NULL;
-}
+uint8_t const *tud_hid_descriptor_report_cb(uint8_t itf) { return hid_report_desc; }
 
 // Invoked when received GET_REPORT control request
 uint16_t tud_hid_get_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer,

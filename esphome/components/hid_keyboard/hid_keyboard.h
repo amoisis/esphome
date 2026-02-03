@@ -11,7 +11,6 @@ namespace esphome::hid_keyboard {
 class HIDKeyboard : public Component {
  public:
   void setup() override;
-  void loop() override;
   void dump_config() override;
   float get_setup_priority() const override { return setup_priority::DATA; }
 
@@ -27,10 +26,6 @@ class HIDKeyboard : public Component {
  protected:
   // HID keyboard report buffer
   uint8_t keyboard_report_[8]{};
-
-  // Last keypress time for auto-release
-  uint32_t last_keypress_time_{0};
-  bool keypress_pending_{false};
 
   // Key release delay in milliseconds
   static constexpr uint32_t KEY_RELEASE_DELAY_MS = 50;
