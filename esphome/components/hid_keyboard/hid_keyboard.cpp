@@ -25,15 +25,28 @@ void HIDKeyboard::setup() {
   this->init_hid_();
 
   // For single-USB-port boards (SuperMini), give USB peripheral time to initialize
-  delay(100);
+  // The USB peripheral needs time to switch from JTAG mode (programming) to OTG mode (device)
+  delay(500);
 
   // Check if HID is available (TinyUSB initialized successfully)
-  this->hid_available_ = tud_hid_ready();
+  // Also check tud_mounted() which indicates USB device is enumerated by host
+  bool hid_ready = tud_hid_ready();
+  bool usb_mounted = tud_mounted();
+
+  this->hid_available_ = hid_ready && usb_mounted;
+
+  ESP_LOGD(TAG, "USB Status: HID ready=%d, USB mounted=%d", hid_ready, usb_mounted);
+
   if (!this->hid_available_) {
     ESP_LOGW(TAG, "HID not available yet - will retry in loop");
-    ESP_LOGW(TAG, "If using single-USB board (SuperMini), ensure USB cable is connected");
+    if (!usb_mounted) {
+      ESP_LOGW(TAG, "USB device not enumerated - check USB connection and that SuperMini is not in JTAG mode");
+    }
+    if (!hid_ready) {
+      ESP_LOGW(TAG, "HID interface not ready - TinyUSB may not be initialized");
+    }
   } else {
-    ESP_LOGI(TAG, "HID device is ready on startup");
+    ESP_LOGI(TAG, "HID device is ready and USB enumerated on startup");
   }
 }
 
@@ -45,9 +58,20 @@ void HIDKeyboard::loop() {
     uint32_t now = millis();
     if (now - last_check > 1000) {
       last_check = now;
-      if (tud_hid_ready()) {
+      bool hid_ready = tud_hid_ready();
+      bool usb_mounted = tud_mounted();
+
+      if (hid_ready && usb_mounted) {
         this->hid_available_ = true;
         ESP_LOGI(TAG, "HID device is now ready (USB enumerated successfully)");
+      } else {
+        // Periodic diagnostics
+        ESP_LOGD(TAG, "Waiting for USB enumeration... HID ready=%d, USB mounted=%d", hid_ready, usb_mounted);
+        if (!usb_mounted && !this->warned_not_mounted_) {
+          this->warned_not_mounted_ = true;
+          ESP_LOGW(TAG, "USB not mounting to host - SuperMini may be stuck in JTAG mode");
+          ESP_LOGW(TAG, "Try: holding BOOT button to confirm JTAG works, then reboot without BOOT button");
+        }
       }
     }
   }

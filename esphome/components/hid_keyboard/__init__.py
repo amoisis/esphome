@@ -50,7 +50,15 @@ async def to_code(config):
     # Ensure HID is available as a device interface
     add_idf_sdkconfig_option("CONFIG_TINYUSB_HID_INTERNAL_FIFO", True)
 
-    # The tinyusb component will handle USB device initialization
+    # CRITICAL: Force USB device mode activation for single-USB boards (SuperMini)
+    # These options ensure the USB peripheral switches from JTAG to OTG device mode
+    add_idf_sdkconfig_option("CONFIG_TINYUSB_DEVICE_MODE", True)
+    add_idf_sdkconfig_option("CONFIG_USB_OTG_SUPPORTED_SPEED_HS", True)
+
+    # For SuperMini boards: Disable USB JTAG to prevent mode conflicts
+    # This forces the USB peripheral to stay in device mode, not JTAG mode
+    add_idf_sdkconfig_option("CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG_ENABLED", False)
+    add_idf_sdkconfig_option("CONFIG_USB_SERIAL_JTAG_ENABLED", False)
 
 
 @automation.register_action(

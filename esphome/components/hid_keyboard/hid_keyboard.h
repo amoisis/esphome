@@ -31,6 +31,9 @@ class HIDKeyboard : public Component {
   // Track if HID is available
   bool hid_available_{false};
 
+  // Track if we've warned about USB not mounting
+  bool warned_not_mounted_{false};
+
   // Key release delay in milliseconds
   static constexpr uint32_t KEY_RELEASE_DELAY_MS = 50;
 
