@@ -68,6 +68,11 @@ async def to_code(config):
     add_idf_sdkconfig_option("CONFIG_TINYUSB_ENDPOINT0_SIZE", "64")
     add_idf_sdkconfig_option("CONFIG_TINYUSB_MAX_CONFIG_POWER", "500")
 
+    # Ensure USB device has endpoints configured for HID
+    add_idf_sdkconfig_option("CONFIG_TINYUSB_HID_EP_BUFSIZE", "64")
+    # Enable USB device with HID endpoint
+    add_idf_sdkconfig_option("CONFIG_TINYUSB_RHPORT_MODE", "1")  # Device mode
+
 
 @automation.register_action(
     "hid_keyboard.send_key",

@@ -21,35 +21,49 @@ static const char *const TAG = "hid_keyboard";
 #endif
 
 void HIDKeyboard::setup() {
-  ESP_LOGI(TAG, "Setting up HID Keyboard");
+  ESP_LOGI(TAG, "=== HID Keyboard Setup Starting ===");
+
   this->init_hid_();
 
   // For single-USB-port boards (SuperMini), give USB peripheral time to initialize
   // The USB peripheral needs time to switch from JTAG mode (programming) to OTG mode (device)
   // sdkconfig options (CONFIG_TINYUSB_DEVICE_MODE, CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG_ENABLED)
   // should have configured the USB peripheral at startup
+  ESP_LOGI(TAG, "Waiting 1 second for USB peripheral initialization...");
   delay(1000);
 
-  // Check if HID is available (TinyUSB initialized successfully)
-  // Also check tud_mounted() which indicates USB device is enumerated by host
+  // Check TinyUSB initialization state
+  ESP_LOGI(TAG, "Checking TinyUSB status...");
+
+  // These functions will tell us if TinyUSB driver is installed and working
   bool hid_ready = tud_hid_ready();
   bool usb_mounted = tud_mounted();
+  bool usb_suspended = tud_suspended();
+
+  ESP_LOGI(TAG, "TinyUSB Status:");
+  ESP_LOGI(TAG, "  - HID ready: %d", hid_ready);
+  ESP_LOGI(TAG, "  - USB mounted: %d", usb_mounted);
+  ESP_LOGI(TAG, "  - USB suspended: %d", usb_suspended);
 
   this->hid_available_ = hid_ready && usb_mounted;
-
-  ESP_LOGI(TAG, "USB Status: HID ready=%d, USB mounted=%d", hid_ready, usb_mounted);
 
   if (!this->hid_available_) {
     ESP_LOGW(TAG, "HID not available yet - will retry in loop");
     if (!usb_mounted) {
-      ESP_LOGW(TAG, "USB device not enumerated to host - verify USB cable and that device is not in JTAG mode");
+      ESP_LOGW(TAG, "CRITICAL: USB not mounting to host!");
+      ESP_LOGW(TAG, "Possible causes:");
+      ESP_LOGW(TAG, "  1. TinyUSB driver installation failed (check ESP_ERROR logs above)");
+      ESP_LOGW(TAG, "  2. USB cable not connected or faulty");
+      ESP_LOGW(TAG, "  3. SuperMini hardware limitation - USB stuck in JTAG mode");
     }
     if (!hid_ready) {
-      ESP_LOGW(TAG, "HID interface not ready - TinyUSB may not have initialized HID class");
+      ESP_LOGW(TAG, "HID interface not ready - TinyUSB HID class not initialized");
     }
   } else {
-    ESP_LOGI(TAG, "HID device is ready and USB enumerated on startup");
+    ESP_LOGI(TAG, "SUCCESS: HID device ready and USB enumerated on startup!");
   }
+
+  ESP_LOGI(TAG, "=== HID Keyboard Setup Complete ===");
 }
 
 void HIDKeyboard::loop() {
