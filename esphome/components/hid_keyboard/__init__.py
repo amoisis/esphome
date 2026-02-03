@@ -55,10 +55,12 @@ async def to_code(config):
     add_idf_sdkconfig_option("CONFIG_TINYUSB_DEVICE_MODE", True)
     add_idf_sdkconfig_option("CONFIG_USB_OTG_SUPPORTED_SPEED_HS", True)
 
-    # For SuperMini boards: Disable USB JTAG to prevent mode conflicts
-    # This forces the USB peripheral to stay in device mode, not JTAG mode
-    add_idf_sdkconfig_option("CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG_ENABLED", False)
-    add_idf_sdkconfig_option("CONFIG_USB_SERIAL_JTAG_ENABLED", False)
+    # For SuperMini boards: Keep USB-JTAG enabled but configure USB in device mode
+    # The key is CONFIG_TINYUSB_DEVICE_MODE=y which makes USB a device, not host
+    # We DON'T disable JTAG because that disables USB entirely
+    # Instead, TinyUSB running in device mode will claim the USB peripheral for HID
+    add_idf_sdkconfig_option("CONFIG_ESP_CONSOLE_USB_SERIAL_JTAG_ENABLED", True)
+    add_idf_sdkconfig_option("CONFIG_USB_SERIAL_JTAG_ENABLED", True)
 
     # Additional USB OTG options to ensure proper device enumeration
     add_idf_sdkconfig_option(
