@@ -8,6 +8,7 @@
 // Include TinyUSB HID APIs from esp_tinyusb
 #include "tusb.h"
 #include "class/hid/hid.h"
+#include "class/hid/hid_device.h"
 
 namespace esphome::hid_keyboard {
 
