@@ -15,8 +15,6 @@ class HIDKeyboard : public Component {
   void dump_config() override;
   float get_setup_priority() const override { return setup_priority::DATA; }
 
-  void set_status_sensor(binary_sensor::BinarySensor *sensor) { this->status_sensor_ = sensor; }
-
   // Send a key with modifier
   void send_key(uint8_t keycode, uint8_t modifier = 0);
 
