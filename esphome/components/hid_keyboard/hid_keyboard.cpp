@@ -3,7 +3,6 @@
 #include "hid_keyboard.h"
 #include "esphome/core/log.h"
 #include "esphome/core/hal.h"
-#include "esphome/components/binary_sensor/binary_sensor.h"
 #include <cstring>
 
 // Include TinyUSB HID APIs from esp_tinyusb
@@ -31,8 +30,8 @@ void HIDKeyboard::loop() {
   if (this->status_sensor_ != nullptr) {
     bool is_ready = tud_hid_ready();
     // Only update if state has changed to avoid unnecessary publishes
-    bool current_state = this->status_sensor_->state;
-    if (current_state != is_ready) {
+    if (this->usb_ready_ != is_ready) {
+      this->usb_ready_ = is_ready;
       this->status_sensor_->publish_state(is_ready);
     }
   }

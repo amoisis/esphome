@@ -42,6 +42,7 @@ class HIDKeyboard : public Component {
 
   // USB connection status sensor
   binary_sensor::BinarySensor *status_sensor_{nullptr};
+  bool usb_ready_{false};  // Track previous USB status to avoid unnecessary publishes
 
   // Initialize TinyUSB HID
   void init_hid_();
