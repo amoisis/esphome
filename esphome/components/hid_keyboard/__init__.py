@@ -12,7 +12,7 @@ import esphome.config_validation as cv
 from esphome.const import CONF_ID
 
 CODEOWNERS = ["@amoisis"]
-DEPENDENCIES = ["tinyusb"]
+# DEPENDENCIES = ["tinyusb"] # Removed to avoid double initialization of TinyUSB driver
 
 CONF_KEY = "key"
 CONF_MODIFIER = "modifier"
