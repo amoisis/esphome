@@ -28,7 +28,9 @@ void HIDKeyboard::loop() {
   // Update USB connection status sensor if configured
   if (this->status_sensor_ != nullptr) {
     bool is_ready = tud_hid_ready();
-    if (this->status_sensor_->state != is_ready) {
+    // Only update if state has changed to avoid unnecessary publishes
+    bool current_state = this->status_sensor_->state;
+    if (current_state != is_ready) {
       this->status_sensor_->publish_state(is_ready);
     }
   }

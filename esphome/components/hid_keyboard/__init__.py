@@ -1,7 +1,12 @@
 from esphome import automation
 import esphome.codegen as cg
 from esphome.components import binary_sensor, esp32
-from esphome.components.esp32 import VARIANT_ESP32P4, VARIANT_ESP32S2, VARIANT_ESP32S3
+from esphome.components.esp32 import (
+    VARIANT_ESP32P4,
+    VARIANT_ESP32S2,
+    VARIANT_ESP32S3,
+    add_idf_sdkconfig_option,
+)
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
 
@@ -40,6 +45,9 @@ async def to_code(config):
     if CONF_STATUS_SENSOR in config:
         sens = await binary_sensor.new_binary_sensor(config[CONF_STATUS_SENSOR])
         cg.add(var.set_status_sensor(sens))
+
+    # Enable TinyUSB HID device in sdkconfig
+    add_idf_sdkconfig_option("CONFIG_TINYUSB_HID_ENABLED", True)
 
     # The tinyusb component will handle USB device initialization
 
