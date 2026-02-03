@@ -67,13 +67,16 @@ void HIDKeyboard::send_report_() {
 }  // namespace esphome::hid_keyboard
 
 // TinyUSB HID Callback Functions
-// These are required by TinyUSB's HID device class implementation
+// These must be in extern "C" because TinyUSB is written in C
+// and needs to find these symbols during linking
+extern "C" {
 
 // Standard HID Keyboard Report Descriptor
-static const uint8_t hid_report_desc[] = {TUD_HID_REPORT_DESC_KEYBOARD()};
+// This tells the PC what buttons/keys this device has
+static const uint8_t desc_hid_report[] = {TUD_HID_REPORT_DESC_KEYBOARD()};
 
 // Invoked when received GET HID REPORT DESCRIPTOR request
-uint8_t const *tud_hid_descriptor_report_cb(uint8_t itf) { return hid_report_desc; }
+uint8_t const *tud_hid_descriptor_report_cb(uint8_t itf) { return desc_hid_report; }
 
 // Invoked when received GET_REPORT control request
 uint16_t tud_hid_get_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t report_type, uint8_t *buffer,
@@ -87,5 +90,7 @@ void tud_hid_set_report_cb(uint8_t itf, uint8_t report_id, hid_report_type_t rep
                            uint16_t buflen) {
   // Not used for keyboard (LED output reports would be handled here)
 }
+
+}  // extern "C"
 
 #endif  // USE_ESP32_VARIANT_ESP32P4 || USE_ESP32_VARIANT_ESP32S2 || USE_ESP32_VARIANT_ESP32S3
