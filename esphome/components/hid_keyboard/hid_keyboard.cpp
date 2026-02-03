@@ -10,7 +10,6 @@
 #include "class/hid/hid.h"
 #include "class/hid/hid_device.h"
 #include "tinyusb.h"
-#include "tinyusb_default_config.h"
 
 namespace esphome::hid_keyboard {
 
@@ -126,16 +125,17 @@ void HIDKeyboard::dump_config() { ESP_LOGCONFIG(TAG, "HID Keyboard:"); }
 void HIDKeyboard::init_hid_() {
   ESP_LOGI(TAG, "Initializing TinyUSB Driver...");
 
-  tinyusb_config_t tusb_cfg = TINYUSB_DEFAULT_CONFIG();
-
-  tusb_cfg.descriptor.device = NULL;  // Uses default text descriptors
-  tusb_cfg.descriptor.full_speed_config = hid_configuration_descriptor;
-  tusb_cfg.descriptor.string = hid_string_descriptor;
-  tusb_cfg.descriptor.string_count = sizeof(hid_string_descriptor) / sizeof(hid_string_descriptor[0]);
-
-// Ensure high speed config is disabled or handled if strict mode is on
+  tinyusb_config_t tusb_cfg = {0};
+  tusb_cfg.device_descriptor = NULL;
+  tusb_cfg.string_descriptor = hid_string_descriptor;
+  tusb_cfg.string_descriptor_count = sizeof(hid_string_descriptor) / sizeof(hid_string_descriptor[0]);
+  tusb_cfg.external_phy = false;
 #if (TUD_OPT_HIGH_SPEED)
-  tusb_cfg.descriptor.high_speed_config = hid_configuration_descriptor;
+  tusb_cfg.fs_configuration_descriptor = hid_configuration_descriptor;
+  tusb_cfg.hs_configuration_descriptor = hid_configuration_descriptor;
+  tusb_cfg.qualifier_descriptor = NULL;
+#else
+  tusb_cfg.configuration_descriptor = hid_configuration_descriptor;
 #endif
 
   esp_err_t err = tinyusb_driver_install(&tusb_cfg);
