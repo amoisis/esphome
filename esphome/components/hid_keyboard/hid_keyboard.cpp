@@ -10,6 +10,13 @@
 #include "class/hid/hid.h"
 #include "class/hid/hid_device.h"
 
+// ESP-IDF USB peripheral configuration
+#ifdef USE_ESP_IDF
+#include "driver/gpio.h"
+#include "soc/usb_periph.h"
+#include "hal/usb_hal.h"
+#endif
+
 namespace esphome::hid_keyboard {
 
 static const char *const TAG = "hid_keyboard";
@@ -22,6 +29,25 @@ static const char *const TAG = "hid_keyboard";
 
 void HIDKeyboard::setup() {
   ESP_LOGI(TAG, "Setting up HID Keyboard");
+
+#ifdef USE_ESP_IDF
+  // CRITICAL: Force USB peripheral into OTG device mode for SuperMini/single-USB boards
+  // On ESP32-S3 SuperMini, the USB peripheral can be in JTAG mode after programming
+  // We need to explicitly switch it to OTG device mode for HID to work
+  ESP_LOGI(TAG, "Forcing USB PHY to OTG device mode (disabling JTAG)");
+
+  // Configure USB D+ and D- pins (GPIO19 and GPIO20 on ESP32-S3)
+  gpio_config_t usb_gpio_config = {};
+  usb_gpio_config.pin_bit_mask = (1ULL << USB_OTG_PERIPH_NUM_D_M) | (1ULL << USB_OTG_PERIPH_NUM_D_P);
+  usb_gpio_config.mode = GPIO_MODE_INPUT_OUTPUT;
+  usb_gpio_config.pull_up_en = GPIO_PULLUP_DISABLE;
+  usb_gpio_config.pull_down_en = GPIO_PULLDOWN_DISABLE;
+  usb_gpio_config.intr_type = GPIO_INTR_DISABLE;
+  gpio_config(&usb_gpio_config);
+
+  ESP_LOGI(TAG, "USB GPIO pins configured (D+ and D-)");
+#endif
+
   this->init_hid_();
 
   // For single-USB-port boards (SuperMini), give USB peripheral time to initialize
