@@ -14,8 +14,9 @@ namespace esphome::hid_keyboard {
 static const char *const TAG = "hid_keyboard";
 
 // HID Report ID for keyboard
+// Set to 0 because TUD_HID_REPORT_DESC_KEYBOARD() without arguments uses no report ID
 #ifndef REPORT_ID_KEYBOARD
-#define REPORT_ID_KEYBOARD 1
+#define REPORT_ID_KEYBOARD 0
 #endif
 
 void HIDKeyboard::setup() {
