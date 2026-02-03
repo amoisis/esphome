@@ -3,6 +3,7 @@
 #include "hid_keyboard.h"
 #include "esphome/core/log.h"
 #include "esphome/core/hal.h"
+#include "esphome/components/binary_sensor/binary_sensor.h"
 #include <cstring>
 
 // Include TinyUSB HID APIs from esp_tinyusb
