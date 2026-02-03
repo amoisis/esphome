@@ -43,8 +43,12 @@ async def to_code(config):
     # Ensure TinyUSB library is available and linked
     add_idf_component(name="espressif/esp_tinyusb", ref="1.7.6~1")
 
-    # Enable TinyUSB HID device in sdkconfig
+    # Enable TinyUSB HID device support in sdkconfig
     add_idf_sdkconfig_option("CONFIG_TINYUSB_HID_ENABLED", True)
+    # Set the number of HID interfaces (must be >= 1 for HID to be compiled)
+    add_idf_sdkconfig_option("CONFIG_TINYUSB_HID_COUNT", 1)
+    # Ensure HID is available as a device interface
+    add_idf_sdkconfig_option("CONFIG_TINYUSB_HID_INTERNAL_FIFO", True)
 
     # The tinyusb component will handle USB device initialization
 
